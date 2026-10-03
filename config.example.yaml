@@ -1,0 +1,45 @@
+# Copy to config.yaml (gitignored)
+bucket: my-encrypted-backup
+region: us-east-1
+aws_profile: default
+
+# Folders to sync (each is encrypted client-side before upload)
+folders:
+  - path: ~/secure
+    prefix: secure/
+
+key:
+  backend: keyring        # keyring | keyfile | tpm | yubikey
+  keyfile_path: ~/.coffee/master.key.enc   # passphrase-protected, used when backend=keyfile
+
+sync:
+  mode: two-way
+  scan_interval: 5m
+  watch: true
+  socket: ~/.coffee/coffee.sock
+  queue_interval: 30s     # how often queued changes are processed
+
+blobs:
+  size: 4MiB              # fixed at vault creation, cannot change later
+
+preserve:
+  mtime: true             # stored in manifest
+  mode: false             # local only, never synced
+  xattrs: false           # local only, never synced
+
+symlinks: skip
+
+manifest:
+  snapshot_every_ops: 500
+  snapshot_every: 1h
+  snapshot_idle_max: 168h   # rewrite latest snapshot at least weekly so lifecycle never expires it
+  retention: 720h         # 30 days for soft-deleted files and old log entries
+
+limits:
+  max_concurrent_transfers: 4
+  upload_bytes_per_sec: 10MiB     # 0 = unlimited
+  download_bytes_per_sec: 10MiB
+  max_file_size: 0        # 0 = no limit; files above this are skipped
+
+updates:
+  mode: notify            # notify (default) | auto | off
